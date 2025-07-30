@@ -1,0 +1,11 @@
+[
+  {
+    "model": "materials.course",
+    "pk": 1,
+    "fields": {
+      "title": "Python для начинающих",
+      "preview": "materials/previews/python.jpg",
+      "description": "Базовый курс по программированию на Python"
+    }
+  }
+]
