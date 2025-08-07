@@ -77,3 +77,7 @@ secrets.json
 config.json
 *.key
 *.pem
+
+config/__pycache__
+materials/__pycache__
+users/__pycache__
