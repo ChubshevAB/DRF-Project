@@ -81,3 +81,5 @@ config.json
 config/__pycache__
 materials/__pycache__
 users/__pycache__
+materials/migrations/__pycache__
+users/migrations/__pycache__
