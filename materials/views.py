@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import (
@@ -27,15 +28,19 @@ class CourseViewSet(ModelViewSet):
             return Course.objects.all()
         return Course.objects.filter(owner=self.request.user)
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
     def get_permissions(self):
         if self.action in ["create"]:
-            return [IsAuthenticated() & ~IsModerator()]
+            permission_classes = [IsAuthenticated, ~IsModerator]
         elif self.action in ["update", "partial_update", "retrieve"]:
-            return [IsAuthenticated(), IsOwnerOrModerator()]
+            permission_classes = [IsAuthenticated, IsOwnerOrModerator]
         elif self.action == "destroy":
-            return [IsAuthenticated(), IsOwner()]
+            permission_classes = [IsAuthenticated, IsOwner]
         else:
-            return [IsAuthenticated()]
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 
 class LessonCreateAPIView(CreateAPIView):
