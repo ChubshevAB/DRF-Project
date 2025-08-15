@@ -22,6 +22,13 @@ class Course(models.Model):
         max_length=250,
         help_text="Введите описание курса",
     )
+    price = models.DecimalField(
+        verbose_name="Цена курса",
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Укажите цену курса в USD"
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True
     )

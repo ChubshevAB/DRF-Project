@@ -16,6 +16,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .paginators import StandardResultsSetPagination
+from .services import (
+    create_stripe_product,
+    create_stripe_price,
+    create_stripe_checkout_session,
+)
+from django.urls import reverse
+from rest_framework import status
 
 
 class CourseViewSet(ModelViewSet):
@@ -116,3 +123,42 @@ class SubscriptionAPIView(APIView):
             "message": message,
             "is_subscribed": is_subscribed
         })
+
+
+class PaymentAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        course = get_object_or_404(Course, id=course_id)
+
+        # Создание продукта в Stripe
+        product_id = create_stripe_product(
+            name=course.title,
+            description=course.description,
+        )
+
+        # Создание цены в Stripe
+        price_id = create_stripe_price(
+            product_id=product_id,
+            amount=float(course.price),
+        )
+
+        # Получение URL для перенаправления
+        success_url = request.build_absolute_uri(
+            reverse('payment-success')
+        )
+        cancel_url = request.build_absolute_uri(
+            reverse('payment-cancel')
+        )
+
+        # Создание сессии оплаты
+        checkout_url = create_stripe_checkout_session(
+            price_id=price_id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+
+        return Response(
+            {'checkout_url': checkout_url},
+            status=status.HTTP_200_OK,
+        )

@@ -40,6 +40,12 @@ class CourseSerializer(serializers.ModelSerializer):
         source="lessons.all"
     )
     is_subscribed = serializers.SerializerMethodField()
+    price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Цена курса в USD"
+    )
 
     class Meta:
         model = Course
