@@ -131,27 +131,29 @@ class PaymentAPIView(APIView):
     def post(self, request, course_id):
         course = get_object_or_404(Course, id=course_id)
 
-        # Создание продукта в Stripe
+        if course.price <= 0:
+            return Response(
+                {"error": "Цена курса должна быть больше нуля"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         product_id = create_stripe_product(
             name=course.title,
             description=course.description,
         )
 
-        # Создание цены в Stripe
         price_id = create_stripe_price(
             product_id=product_id,
-            amount=float(course.price),
+            amount=course.price,
         )
 
-        # Получение URL для перенаправления
         success_url = request.build_absolute_uri(
-            reverse('payment-success')
+            reverse('materials:payment-success')
         )
         cancel_url = request.build_absolute_uri(
-            reverse('payment-cancel')
+            reverse('materials:payment-cancel')
         )
 
-        # Создание сессии оплаты
         checkout_url = create_stripe_checkout_session(
             price_id=price_id,
             success_url=success_url,
