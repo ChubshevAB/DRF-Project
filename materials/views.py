@@ -23,6 +23,7 @@ from .services import (
 )
 from django.urls import reverse
 from rest_framework import status
+from .tasks import send_course_update_notification
 
 
 class CourseViewSet(ModelViewSet):
@@ -37,6 +38,11 @@ class CourseViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        course_id = serializer.instance.id
+        send_course_update_notification.delay(course_id)
 
     def get_permissions(self):
         if self.action in ["create"]:
@@ -104,7 +110,7 @@ class SubscriptionAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        course_id = request.data.get('course_id')
+        course_id = request.data.get("course_id")
         course = get_object_or_404(Course, id=course_id)
         subscription, created = Subscription.objects.get_or_create(
             user=user,
@@ -113,16 +119,13 @@ class SubscriptionAPIView(APIView):
 
         if not created:
             subscription.delete()
-            message = 'Подписка удалена'
+            message = "Подписка удалена"
             is_subscribed = False
         else:
-            message = 'Подписка добавлена'
+            message = "Подписка добавлена"
             is_subscribed = True
 
-        return Response({
-            "message": message,
-            "is_subscribed": is_subscribed
-        })
+        return Response({"message": message, "is_subscribed": is_subscribed})
 
 
 class PaymentAPIView(APIView):
@@ -134,7 +137,7 @@ class PaymentAPIView(APIView):
         if course.price <= 0:
             return Response(
                 {"error": "Цена курса должна быть больше нуля"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         product_id = create_stripe_product(
@@ -147,12 +150,8 @@ class PaymentAPIView(APIView):
             amount=course.price,
         )
 
-        success_url = request.build_absolute_uri(
-            reverse('materials:payment-success')
-        )
-        cancel_url = request.build_absolute_uri(
-            reverse('materials:payment-cancel')
-        )
+        success_url = request.build_absolute_uri(reverse("materials:payment-success"))
+        cancel_url = request.build_absolute_uri(reverse("materials:payment-cancel"))
 
         checkout_url = create_stripe_checkout_session(
             price_id=price_id,
@@ -161,6 +160,6 @@ class PaymentAPIView(APIView):
         )
 
         return Response(
-            {'checkout_url': checkout_url},
+            {"checkout_url": checkout_url},
             status=status.HTTP_200_OK,
         )

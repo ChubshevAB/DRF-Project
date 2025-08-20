@@ -27,7 +27,7 @@ class Course(models.Model):
         max_digits=10,
         decimal_places=2,
         default=0,
-        help_text="Укажите цену курса в USD"
+        help_text="Укажите цену курса в USD",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True
@@ -84,24 +84,23 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='subscriptions',
-        verbose_name="Пользователь"
+        related_name="subscriptions",
+        verbose_name="Пользователь",
     )
     course = models.ForeignKey(
-        'Course',
+        "Course",
         on_delete=models.CASCADE,
-        related_name='subscriptions',
-        verbose_name="Курс"
+        related_name="subscriptions",
+        verbose_name="Курс",
     )
     subscribed_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата подписки"
+        auto_now_add=True, verbose_name="Дата подписки"
     )
 
     class Meta:
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
-        unique_together = ('user', 'course')
+        unique_together = ("user", "course")
 
     def __str__(self):
         return f"{self.user.email} подписан на {self.course.title}"

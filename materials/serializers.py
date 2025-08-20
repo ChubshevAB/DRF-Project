@@ -9,18 +9,16 @@ class LessonSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = "__all__"
         extra_kwargs = {
-            'owner': {'read_only': True},
-            'video_link': {'validators': [YouTubeURLValidator()]},
+            "owner": {"read_only": True},
+            "video_link": {"validators": [YouTubeURLValidator()]},
         }
 
     def validate(self, attrs):
-        request = self.context.get('request')
+        request = self.context.get("request")
 
-        if request and request.method == 'POST':
+        if request and request.method == "POST":
             if request.user.groups.filter(name="moderators").exists():
-                raise serializers.ValidationError(
-                    "Модераторы не могут создавать уроки"
-                )
+                raise serializers.ValidationError("Модераторы не могут создавать уроки")
 
         if self.instance and request:
             if not IsModerator().has_permission(request, None):
@@ -34,38 +32,27 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     lesson_count = serializers.SerializerMethodField()
-    lessons = LessonSerializer(
-        many=True,
-        read_only=True,
-        source="lessons.all"
-    )
+    lessons = LessonSerializer(many=True, read_only=True, source="lessons.all")
     is_subscribed = serializers.SerializerMethodField()
     price = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-        help_text="Цена курса в USD"
+        max_digits=10, decimal_places=2, default=0, help_text="Цена курса в USD"
     )
 
     class Meta:
         model = Course
         fields = "__all__"
-        extra_kwargs = {
-            'owner': {'read_only': True}
-        }
+        extra_kwargs = {"owner": {"read_only": True}}
 
     def get_lesson_count(self, instance):
         """Возвращает количество уроков в курсе"""
         return instance.lessons.count()
 
     def validate(self, attrs):
-        request = self.context.get('request')
+        request = self.context.get("request")
 
-        if request and request.method == 'POST':
+        if request and request.method == "POST":
             if request.user.groups.filter(name="moderators").exists():
-                raise serializers.ValidationError(
-                    "Модераторы не могут создавать курсы"
-                )
+                raise serializers.ValidationError("Модераторы не могут создавать курсы")
 
         if self.instance and request:
             if not IsModerator().has_permission(request, None):
@@ -77,12 +64,11 @@ class CourseSerializer(serializers.ModelSerializer):
         return attrs
 
     def get_is_subscribed(self, instance):
-        request = self.context.get('request')
+        request = self.context.get("request")
 
         if request and request.user.is_authenticated:
             return Subscription.objects.filter(
-                user=request.user,
-                course=instance
+                user=request.user, course=instance
             ).exists()
         return False
 
@@ -90,5 +76,5 @@ class CourseSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
-        fields = '__all__'
-        read_only_fields = ('user', 'subscribed_at')
+        fields = "__all__"
+        read_only_fields = ("user", "subscribed_at")
