@@ -29,3 +29,23 @@
 1. **Скопируйте файлы проекта из репозитория https://github.com/ChubshevAB/DRF-Project в рабочую директорию**
 ```bash
 cd path/to/your/project-directory
+```
+## Запуск проекта с Docker Compose
+
+### Запуск проекта
+```bash
+# Сборка и запуск всех сервисов
+docker-compose up --build
+
+# Запуск в фоновом режиме
+docker-compose up -d --build
+
+# Остановка проекта
+docker-compose down
+
+# Остановка с удалением volumes
+docker-compose down -v
+
+# Перезапуск конкретного сервиса
+docker-compose restart web
+```
