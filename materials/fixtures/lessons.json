@@ -1,0 +1,13 @@
+[
+  {
+    "model": "materials.lesson",
+    "pk": 1,
+    "fields": {
+      "title": "Django REST Framework",
+      "preview": "materials/previews/python_intro.jpg",
+      "description": "Сериализаторы",
+      "video_link": "https://example.com/video1",
+      "course": 1
+    }
+  }
+]
