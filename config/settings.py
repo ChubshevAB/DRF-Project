@@ -66,11 +66,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.getenv("NAME"),
-        "USER": os.getenv("USER"),
-        "PASSWORD": os.getenv("PASSWORD"),
-        "HOST": os.getenv("HOST"),
-        "PORT": os.getenv("PORT"),
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
     }
 }
 
@@ -138,9 +138,13 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Настройки для Celery
 
 # URL-адрес брокера сообщений
-CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 
 # URL-адрес брокера результатов, также Redis
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://redis:6379")
 
 CELERY_TIMEZONE = "Europe/Moscow"
+
+# Дополнительные настройки Redis
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = os.getenv("REDIS_PORT", 6379)
