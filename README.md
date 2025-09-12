@@ -16,23 +16,26 @@
 
 ## Технологический стек
 
-- **Backend**: Django 4.2+, Django REST Framework
-- **База данных**: PostgreSQL (по умолчанию SQLite)
+- **Backend**: Django 5.2+, Django REST Framework
+- **База данных**: PostgreSQL
+- **Веб-сервер**: Nginx + Gunicorn
 - **Аутентификация**: JWT (Simple JWT)
 - **Платежная система**: Stripe API
 - **Асинхронные задачи**: Celery + Redis
-- **Файловое хранилище**: Django Storage (для изображений и медиа)
-- **Валидация**: Кастомные валидаторы (YouTube ссылки)
+- **Контейнеризация**: Docker + Docker Compose
+- **CI/CD**: GitHub Actions
 
 ## Установка и запуск
 
-1. **Скопируйте файлы проекта из репозитория https://github.com/ChubshevAB/DRF-Project в рабочую директорию**
-```bash
-cd path/to/your/project-directory
-```
-## Запуск проекта с Docker Compose
+### 1. Клонирование репозитория
 
-### Запуск проекта
+```bash
+git clone https://github.com/ChubshevAB/DRF-Project.git
+cd DRF-Project
+```
+
+### Запуск проекта с Docker Compose
+
 ```bash
 # Сборка и запуск всех сервисов
 docker-compose up --build
