@@ -86,14 +86,21 @@ jobs:
     - name: Setup SSH
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 700 ~/.ssh
+        cat << 'EOF' > ~/.ssh/id_rsa
+        ${{ secrets.SSH_PRIVATE_KEY }}
+        EOF
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+
+    - name: Test SSH connection
+      run: |
+        ssh -v -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'"
 
     - name: Copy files to remote server
       run: |
-        ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /home/${{ secrets.SERVER_USER }}/app"
-        scp -i ~/.ssh/id_rsa -r \
+        tar -czf /tmp/deploy.tar.gz \
           --exclude='.git' \
           --exclude='.github' \
           --exclude='__pycache__' \
@@ -101,8 +108,16 @@ jobs:
           --exclude='.pytest_cache' \
           --exclude='venv' \
           --exclude='.env' \
-          ./ \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/app/
+          .
+        
+        scp -i ~/.ssh/id_rsa /tmp/deploy.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/
+        
+        ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          mkdir -p /home/${{ secrets.SERVER_USER }}/app
+          tar -xzf /tmp/deploy.tar.gz -C /home/${{ secrets.SERVER_USER }}/app
+          rm /tmp/deploy.tar.gz
+        "
+        rm /tmp/deploy.tar.gz
 
     - name: Deploy on remote server
       run: |
@@ -110,7 +125,8 @@ jobs:
           cd /home/${{ secrets.SERVER_USER }}/app
           docker compose down
           docker compose up -d --build
-          sleep 10
+          sleep 15
           docker compose exec web python manage.py migrate --noinput
           docker compose exec web python manage.py collectstatic --noinput
+          echo 'Deployment completed successfully'
         "
