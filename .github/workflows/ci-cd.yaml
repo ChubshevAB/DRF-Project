@@ -83,19 +83,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install SSH dependencies
+    - name: Setup SSH
       run: |
-        sudo apt-get update
-        sudo apt-get install -y openssh-client
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Copy files to remote server using rsync
+    - name: Copy files to remote server
       run: |
-        # Создаем директорию на сервере
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-          "mkdir -p /home/${{ secrets.SERVER_USER }}/app"
-        
-        # Копируем файлы с исключениями
-        rsync -avz \
+        ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p /home/${{ secrets.SERVER_USER }}/app"
+        scp -i ~/.ssh/id_rsa -r \
           --exclude='.git' \
           --exclude='.github' \
           --exclude='__pycache__' \
@@ -103,20 +101,16 @@ jobs:
           --exclude='.pytest_cache' \
           --exclude='venv' \
           --exclude='.env' \
-          -e "ssh -o StrictHostKeyChecking=no" \
           ./ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/${{ secrets.SERVER_USER }}/app/
 
     - name: Deploy on remote server
-      uses: appleboy/ssh-action@v0.1.10
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
+      run: |
+        ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
           cd /home/${{ secrets.SERVER_USER }}/app
           docker compose down
           docker compose up -d --build
           sleep 10
           docker compose exec web python manage.py migrate --noinput
           docker compose exec web python manage.py collectstatic --noinput
+        "
