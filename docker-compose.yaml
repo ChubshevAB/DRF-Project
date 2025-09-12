@@ -16,12 +16,12 @@ services:
   nginx:
     build:
       context: ./nginx
-    ports:  # ← вынесено из блока build
+    ports:
       - "80:80"
-    volumes:  # ← исправлено написание (было voLumes)
+    volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - static_volume:/app/staticfiles
-    depends_on:  # ← вынесено из блока build
+    depends_on:
       - web
 
   db:
